@@ -1,55 +1,120 @@
+// Game Board object and functions
 const gameboard = (() => {
-    const board = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-    
-    //Display the tic tac toe board
+    const board = ['', '', '', '', '', '', '', '', ''];
+
+    // Display the tic tac toe board
     const getBoard = () => board;
 
-    //Updated the board with the given index and marker
+    // Update the board with the given index and marker
     const updateBoard = (index, marker) => {
-        board[index] = marker;
+        if (board[index] === '') {
+            board[index] = marker;
+            return true;
+        }
+        return false;
     };
 
-    //Resets the board
+    // Resets the board
     const resetBoard = () => {
-        for(let i = 0; i < board.length; i++){
-            board[i] = 0;
+        for (let i = 0; i < board.length; i++) {
+            board[i] = '';
         }
     };
 
-    return { getBoard, updateBoard, resetBoard }
+    return { getBoard, updateBoard, resetBoard };
 })();
 
-//Factory function for creating player
-function createPlayer(name) {
+// Factory function for creating players
+const createPlayer = (name, marker) => {
+    const getName = () => name;
+    const getMarker = () => marker;
+    return { getName, getMarker };
+};
 
-    const username = '@' + name;
+// Game object to control the flow of the game
+const game = (() => {
+    const player1 = createPlayer("Player 1", "X");
+    const player2 = createPlayer("Player 2", "O");
+    let currentPlayer = player1;
 
-    return { username };
-}
+    const playTurn = (index) => {
+        if (gameboard.updateBoard(index, currentPlayer.getMarker())) {
+            if (checkWin()) {
+                alert(`${currentPlayer.getName()} wins!`);
+                gameboard.resetBoard();
+                displayBoard();
+            } else {
+                currentPlayer = currentPlayer === player1 ? player2 : player1;
+            }
+        }
+    };
 
-//Function to create Player1 object
-const Player1 = (name) => {
-    const player1Name = createPlayer(name)
-    const marker = 'X';
+    const getCurrentPlayer = () => currentPlayer;
 
-    return { player1Name, marker }
-}
+    return { playTurn, getCurrentPlayer };
+})();
 
-//Function to create Player2 object
-const Player2 = (name) => {
-    const player2Name = createPlayer(name);
-    const marker = 'O';
+// Function to display the board in the console (FOR TESTING ONLY)
+// const displayBoard = () => {
+//     const board = gameboard.getBoard();
+//     console.log(`
+//      ${board[0]} | ${board[1]} | ${board[2]}
+//     -----------
+//      ${board[3]} | ${board[4]} | ${board[5]}
+//     -----------
+//      ${board[6]} | ${board[7]} | ${board[8]}
+//     `);
+// };
 
-    return { player2Name, marker }
-}
+// Function to check for a win
+const checkWin = () => {
+    const board = gameboard.getBoard();
+    const winningCombinations = [
+        [0, 1, 2],
+        [3, 4, 5],
+        [6, 7, 8],
+        [0, 3, 6],
+        [1, 4, 7],
+        [2, 5, 8],
+        [0, 4, 8],
+        [2, 4, 6]
+    ];
+    for (let combination of winningCombinations) {
+        if (board[combination[0]] === board[combination[1]] &&
+            board[combination[1]] === board[combination[2]] &&
+            board[combination[0]] !== '') {
+            return true;
+        }
+    }
+    return false;
+};
 
-updateBoard(0, 'X');
+document.addEventListener('DOMContentLoaded', () => {
+    const cells = document.querySelectorAll('.cell');
+    const resetButton = document.getElementById('reset-button');
 
-console.log(gameboard.getBoard());
+    cells.forEach(cell => {
+        cell.addEventListener('click', () => {
+            const index = cell.getAttribute('data-index');
+            game.playTurn(index);
+            displayBoard();
+        });
+    });
 
-console.log("------");
+    resetButton.addEventListener('click', () => {
+        gameboard.resetBoard();
+        displayBoard();
+    });
 
-gameboard.resetBoard();
+    displayBoard();
+});
 
-console.log("After reset");
-console.log(gameboard.getBoard());
+// Function to display the board on the webpage
+const displayBoard = () => {
+    const board = gameboard.getBoard();
+    const cells = document.querySelectorAll('.cell');
+    cells.forEach((cell, index) => {
+        cell.textContent = board[index];
+    });
+};
+
